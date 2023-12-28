@@ -15,10 +15,12 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/beego/beego/context"
+	"github.com/beego/beego/logs"
 	"github.com/casdoor/casdoor/conf"
 	"github.com/casdoor/casdoor/object"
 )
@@ -45,6 +47,9 @@ func CorsFilter(ctx *context.Context) {
 	originConf := conf.GetConfigString("origin")
 	originHostname := getHostname(origin)
 	host := removePort(ctx.Request.Host)
+
+	logs.Info(fmt.Sprintf("origin %s", origin))
+	logs.Info(fmt.Sprintf("originConf %s", originConf))
 
 	if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "https://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") || strings.HasPrefix(origin, "http://casdoor-app") {
 		setCorsHeaders(ctx, origin)
@@ -75,6 +80,9 @@ func CorsFilter(ctx *context.Context) {
 			setCorsHeaders(ctx, origin)
 		} else {
 			ok, err := object.IsOriginAllowed(origin)
+
+			logs.Info(fmt.Sprintf("ok %v", ok))
+
 			if err != nil {
 				panic(err)
 			}
@@ -82,6 +90,7 @@ func CorsFilter(ctx *context.Context) {
 			if ok {
 				setCorsHeaders(ctx, origin)
 			} else {
+				logs.Info(fmt.Sprintf("origin forbidden %s", origin))
 				ctx.ResponseWriter.WriteHeader(http.StatusForbidden)
 				return
 			}
